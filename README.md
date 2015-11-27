@@ -12,6 +12,8 @@ mpl_map = cmap.viridis(np.arange(256))
 ColorMapWriter.ColorMapWriter(mpl_map, 'viridis.xml')
 ```
 
+The file then needs placed in the %APPDATA%\itksnap.org\ITK-SNAP\ColorMaps folder if using Windows for example.
+
 
 As shown in ITK-SNAP as the following
 
