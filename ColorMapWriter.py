@@ -128,9 +128,3 @@ class ColorMapWriter(object):
       else:
         if level and (not elem.tail or not elem.tail.strip()):
           elem.tail = i
-
-
-import matplotlib.cm as cmap
-
-mpl_map = cmap.viridis(np.arange(256))
-ColorMapWriter(mpl_map, 'viridis.xml')
