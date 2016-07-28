@@ -5,28 +5,33 @@ import xml.etree.ElementTree as xml
 import numpy as np
 
 class ColorMapWriter(object):
-    def __init__(self, lookuptable, filename):
 
+    ctrl_pt_number = None
+    lookuptable = None
+    filename = None
+
+    def __init__(self, lookuptable, filename, ctrl_pt_num = 10):
+    
         if not isinstance(lookuptable, np.ndarray) or lookuptable.shape[1] != 4:
             print ("Invalid Lookup Table Format!")
             return
 
-        root = xml.Element("registry")
-        num_tbl_pts = int(lookuptable.shape[0])
+        self.ctrl_pt_number = ctrl_pt_num
+        self.lookuptable = lookuptable
+        self.filename = filename
+
+    def createLookupTable(self):
+        if not isinstance(self.lookuptable, np.ndarray) or self.lookuptable.shape[1] != 4:
+            print ("Invalid Lookup Table Format!")
+            return
+        
+        self.root = xml.Element("registry")
+        num_tbl_pts = int(self.lookuptable.shape[0])
 
         range_nudge = 1
         clr_range = range(0, num_tbl_pts, range_nudge)
         clr_range.append(num_tbl_pts-1)
 
-        num_ctrlpts_ele = xml.Element("entry")
-        num_ctrlpts_ele.set('key','NumberOfControlPoints')
-        num_ctrlpts_ele.set('value', '{:d}'.format(len(clr_range)))
-        preset_ele = xml.Element("entry")
-        preset_ele.set('key', 'Preset')
-        preset_ele.set('value', 'Custom')
-
-        root.append(num_ctrlpts_ele)
-        root.append(preset_ele)
 
         rgba = [0, 0, 0, 0]
         rgba_vals = list()
@@ -35,28 +40,44 @@ class ColorMapWriter(object):
         clr_range.append(num_tbl_pts-1)
 
         for x in clr_range:
-            rgba = lookuptable[x,:]
+            rgba = self.lookuptable[x,:]
             rgba_vals.extend([[int(rgba[0]*255.0),int(rgba[1]*255.0),int(rgba[2]*255.0), int(rgba[3]*255.0)]])
 
         st_ind, end_ind = clr_range[0], clr_range[::-1][0]
 
-        num_ctrl_pts = len(range(0, num_tbl_pts, range_nudge))
+        #num_ctrl_pts = len(range(0, num_tbl_pts, range_nudge))
+        num_ctrl_pts = np.arange(0,self.lookuptable.shape[0]+1, (self.lookuptable.shape[0]-1)/(self.ctrl_pt_number)).astype(np.int)
+        
+        st_ind, end_ind = num_ctrl_pts[0], num_ctrl_pts[::-1][0]
 
-        for i,ct in enumerate(clr_range):
+        self.writeHeader()
+
+        
+        for ct,i in enumerate(num_ctrl_pts):
             if ct == st_ind or ct == end_ind:
-                ctrl_pt = self.create_control_point(i, rgba_vals[i], num_ctrl_pts, True)
+                ctrl_pt = self.create_control_point(ct, rgba_vals[i], self.ctrl_pt_number, True)
             else:
-                ctrl_pt = self.create_control_point(i, rgba_vals[i], num_ctrl_pts, False)
-            root.append(ctrl_pt)
+                ctrl_pt = self.create_control_point(ct, rgba_vals[i], self.ctrl_pt_number, False)
+            self.root.append(ctrl_pt)
 
-        self.indent(root)
-        tree = xml.ElementTree(root)
+        self.indent(self.root)
+        tree = xml.ElementTree(self.root)
 
-        with open(filename, 'w') as f:
+        with open(self.filename, 'w') as f:
             declaration = '<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<!DOCTYPE registry [\n<!ELEMENT registry (entry*,folder*)>\n<!ELEMENT folder (entry*,folder*)>\n<!ELEMENT entry EMPTY>\n<!ATTLIST folder key CDATA #REQUIRED>\n<!ATTLIST entry key CDATA #REQUIRED>\n<!ATTLIST entry value CDATA #REQUIRED>\n]>\n'
             f.write(declaration)
             tree.write(f, 'utf-8')
 
+    def writeHeader(self):
+        num_ctrlpts_ele = xml.Element("entry")
+        num_ctrlpts_ele.set('key','NumberOfControlPoints')
+        num_ctrlpts_ele.set('value', '{:d}'.format(self.ctrl_pt_number+1))
+        preset_ele = xml.Element("entry")
+        preset_ele.set('key', 'Preset')
+        preset_ele.set('value', 'Custom')
+        self.root.append(num_ctrlpts_ele)
+        self.root.append(preset_ele)
+            
     def create_control_point(self, pos, rgba_vals, numcols, type_val = True):
         ctrl_pt_ele = xml.Element('folder')
         ctrl_pt_ele.set('key', 'ControlPoint[{}]'.format(str(pos).zfill(4)))
