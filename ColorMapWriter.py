@@ -3,6 +3,7 @@ __project__ = 'ColorMapToITKSNAP'
 
 import xml.etree.ElementTree as xml
 import numpy as np
+import io
 
 class ColorMapWriter(object):
 
@@ -29,14 +30,14 @@ class ColorMapWriter(object):
         num_tbl_pts = int(self.lookuptable.shape[0])
 
         range_nudge = 1
-        clr_range = range(0, num_tbl_pts, range_nudge)
+        clr_range = list(range(0, num_tbl_pts, range_nudge))
         clr_range.append(num_tbl_pts-1)
 
 
         rgba = [0, 0, 0, 0]
         rgba_vals = list()
 
-        clr_range = range(0, num_tbl_pts, range_nudge)
+        clr_range = list(range(0, num_tbl_pts, range_nudge))
         clr_range.append(num_tbl_pts-1)
 
         for x in clr_range:
@@ -63,10 +64,9 @@ class ColorMapWriter(object):
         self.indent(self.root)
         tree = xml.ElementTree(self.root)
 
-        with open(self.filename, 'w') as f:
-            declaration = '<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<!DOCTYPE registry [\n<!ELEMENT registry (entry*,folder*)>\n<!ELEMENT folder (entry*,folder*)>\n<!ELEMENT entry EMPTY>\n<!ATTLIST folder key CDATA #REQUIRED>\n<!ATTLIST entry key CDATA #REQUIRED>\n<!ATTLIST entry value CDATA #REQUIRED>\n]>\n'
-            f.write(declaration)
-            tree.write(f, 'utf-8')
+        with io.open(self.filename, 'w') as f:
+            f.write('<?xml version=\'1.0\' encoding=\'utf-8\'?>\n<!DOCTYPE registry [\n<!ELEMENT registry (entry*,folder*)>\n<!ELEMENT folder (entry*,folder*)>\n<!ELEMENT entry EMPTY>\n<!ATTLIST folder key CDATA #REQUIRED>\n<!ATTLIST entry key CDATA #REQUIRED>\n<!ATTLIST entry value CDATA #REQUIRED>\n]>\n')
+        tree.write(self.filename, 'utf-8')
 
     def writeHeader(self):
         num_ctrlpts_ele = xml.Element("entry")
