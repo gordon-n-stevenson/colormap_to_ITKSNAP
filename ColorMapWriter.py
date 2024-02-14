@@ -47,7 +47,7 @@ class ColorMapWriter(object):
         st_ind, end_ind = clr_range[0], clr_range[::-1][0]
 
         #num_ctrl_pts = len(range(0, num_tbl_pts, range_nudge))
-        num_ctrl_pts = np.arange(0,self.lookuptable.shape[0]+1, (self.lookuptable.shape[0]-1)/(self.ctrl_pt_number)).astype(np.int)
+        num_ctrl_pts = np.arange(0,self.lookuptable.shape[0]+1, (self.lookuptable.shape[0]-1)/(self.ctrl_pt_number)).astype(int)
         
         st_ind, end_ind = num_ctrl_pts[0], num_ctrl_pts[::-1][0]
 
